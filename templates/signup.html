@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Create Account{% endblock %}
+
+{% block extra_css %}
+<style>
+    .password-strength {
+        height: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .strength-label {
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="brand-header">
+    <div class="brand-icon">✨</div>
+    <div class="brand-name">NexAuth</div>
+    <div class="brand-tag">Create Account</div>
+</div>
+
+<div class="auth-card">
+    <h1>Create Account</h1>
+    <p>Sign up to get started</p>
+
+    <form method="POST" id="signupForm">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="you@example.com" 
+                required
+                value="{{ request.form.get('email', '') }}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Min 8 characters" 
+                required
+                oninput="checkPasswordStrength()"
+            >
+            <!-- Show Password Checkbox -->
+            <div class="show-password">
+                <input type="checkbox" id="showPassword" onclick="togglePassword()">
+                <label for="showPassword">
+                    Show Password
+                </label>
+            </div>
+            <div class="password-strength">
+                <div class="password-strength-bar" id="strengthBar"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel">Password Strength</div>
+            <small style="color: #94a3b8; display: block; margin-top: 8px;">
+                ✓ Uppercase · ✓ Lowercase · ✓ Number · ✓ 8+ characters
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input 
+                type="password" 
+                id="confirm_password" 
+                name="confirm_password" 
+                placeholder="Re-enter password" 
+                required
+            >
+            <!-- Show Password Checkbox -->
+            <div class="show-password">
+                <input type="checkbox" id="showConfirmPassword" onclick="toggleConfirmPassword()">
+                <label for="showConfirmPassword">
+                    Show Password
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Verify CAPTCHA</label>
+            <div class="captcha-box">
+                <div class="captcha-text" id="captchaText">{{ captcha }}</div>
+                <button type="button" class="refresh-btn" onclick="refreshCaptcha()">🔄</button>
+            </div>
+            <input 
+                type="text" 
+                name="captcha" 
+                placeholder="Enter CAPTCHA text" 
+                required
+                style="text-transform: uppercase;"
+            >
+        </div>
+
+        <button type="submit" class="btn">✨ Create Account</button>
+    </form>
+
+    <div class="form-link">
+        Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
+    </div>
+</div>
+
+<script>
+function checkPasswordStrength() {
+    const password = document.getElementById('password').value;
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthLabel = document.getElementById('strengthLabel');
+    
+    let score = 0;
+    
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    
+    const widths = ['0%', '25%', '50%', '75%', '100%'];
+    const colors = ['#f87171', '#fbbf24', '#34d399', '#5b8df6', '#10b981'];
+    const labels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+    
+    strengthBar.style.width = widths[score];
+    strengthBar.style.backgroundColor = colors[score];
+    strengthLabel.textContent = labels[score];
+    strengthLabel.style.color = colors[score];
+}
+
+function togglePassword() {
+    const passwordField = document.getElementById("password");
+
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+    } else {
+        passwordField.type = "password";
+    }
+}
+
+function toggleConfirmPassword() {
+    const confirmPassword = document.getElementById("confirm_password");
+    
+    if (confirmPassword.type === "password") {
+        confirmPassword.type = "text";
+    } else {
+        confirmPassword.type = "password";
+    }
+}
+
+function refreshCaptcha() {
+    fetch('/api/refresh-captcha', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({page: 'signup'})
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('captchaText').textContent = data.captcha;
+        document.querySelector('input[name="captcha"]').value = '';
+        document.querySelector('input[name="captcha"]').focus();
+    });
+}
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match');
+        return;
+    }
+});
+</script>
+{% endblock %}

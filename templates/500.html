@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 120px; margin-bottom: 20px;">⚠️</div>
+    <h1 style="color: #cbd5e1; font-size: 32px; margin-bottom: 10px;">Server Error</h1>
+    <p style="color: #94a3b8; font-size: 16px; margin-bottom: 30px;">Something went wrong on our end. Please try again later.</p>
+    
+    <a href="{{ url_for('login') }}" style="
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        transition: all 0.3s ease;
+    ">← Back to Login</a>
+</div>
+{% endblock %}

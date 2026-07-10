@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost Person Detection Project</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;500;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/indexPageStyling.css') }}">
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="background">
+        <div class="stars"></div>
+        <div class="grid"></div>
+        <div class="overlay"></div>
+    </div>
+
+    <!-- Floating Glow Effects -->
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+
+    <!-- Animated Network -->
+    <div class="network">
+        <span class="node node1"></span>
+        <span class="node node2"></span>
+        <span class="node node3"></span>
+        <span class="node node4"></span>
+        <span class="node node5"></span>
+
+        <span class="line line1"></span>
+        <span class="line line2"></span>
+        <span class="line line3"></span>
+        <span class="line line4"></span>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Navigation -->
+    <header class="navbar">
+
+        <div class="logo">
+            <span class="logo-circle">AI</span>
+            <h2>Lost Person Detection</h2>
+        </div>
+
+        <nav>
+
+            <a href="{{ url_for('index') }}">Home</a>
+
+            <a href="#">About</a>
+
+            <a href="#">Contact</a>
+
+        </nav>
+
+    </header>
+
+
+
+    <!-- Hero Section -->
+
+    <section class="hero">
+
+        <!-- Left Content -->
+
+        <div class="hero-content">
+
+            <p class="tagline">
+                Artificial Intelligence Powered
+            </p>
+
+            <h1>
+                Lost Person
+            </h1>
+
+            <h1>
+                Detection
+            </h1>
+
+            <h1 class="gradient-text">
+                Project
+            </h1>
+
+            <p class="description">
+
+                Smart AI system for detecting and identifying missing persons
+                using facial recognition and deep learning technology.
+
+            </p>
+
+
+            <!-- Buttons -->
+
+            <div class="buttons">
+
+                <a href="{{ url_for('login') }}" class="btn login-btn">
+                    Login
+                </a>
+
+                <a href="{{ url_for('signup') }}" class="btn signup-btn">
+                    Signup
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Right Side Image -->
+
+        <div class="hero-image">
+
+            <img
+            src="{{ url_for('static', filename='images/laptop.png') }}"
+            alt="AI Laptop">
+
+        </div>
+
+    </section>
+
+
+
+    <!-- Footer -->
+
+    <footer>
+
+        <div class="footer-links">
+
+            <a href="{{ url_for('user1Page') }}">
+                👤 @rahulmanna
+            </a>
+
+            <a href="{{ url_for('user2Page') }}">
+                👤 @anurimaghoshal
+            </a>
+
+            <a href="{{ url_for('user3Page') }}">
+                👤 @shereenmukhtar
+            </a>
+
+            <a href="{{ url_for('user4Page') }}">
+                👤 @riyasingh
+            </a>
+
+        </div>
+
+        <p>
+
+            © 2026 Lost Person Detection Project | Deep Learning Algorithm
+
+        </p>
+
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Missing Person Detection</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --bg: #070a14;
+    --bg-alt: #0b0f1e;
+    --panel: #10142380;
+    --panel-solid:#101423;
+    --border: #232a45;
+    --purple: #8b5cf6;
+    --purple-soft: #6d5bd0;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e7e9f5;
+    --text-dim: #8890b5;
+    --text-dimmer: #5c6488;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(circle at 20% 0%, #131a33 0%, var(--bg) 45%) fixed;
+    color: var(--text);
+    font-family: 'Segoe UI', Inter, system-ui, -apple-system, sans-serif;
+    padding-bottom: 60px;
+  }
+  a{color:inherit; text-decoration:none;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,10,20,0.85);
+    backdrop-filter: blur(6px);
+    position: sticky; top:0; z-index:50;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.15rem;}
+  .brand i{
+    background: linear-gradient(135deg,var(--purple),var(--blue));
+    padding:8px; border-radius:10px; font-size:1rem;
+  }
+  nav{display:flex; gap:28px; font-size:0.92rem; color: var(--text-dim);}
+  nav a.active{color:#fff; font-weight:600; position:relative;}
+  nav a.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-18px; height:2px;
+    background: linear-gradient(90deg,var(--purple),var(--blue));
+  }
+  nav a:hover{color:#fff;}
+  .engine-status{
+    display:flex; align-items:center; gap:8px;
+    background: rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.35);
+    padding:8px 14px; border-radius:999px; font-size:0.85rem; color:var(--green); font-weight:600;
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  .wrap{padding: 26px 32px; display:flex; flex-direction:column; gap:22px;}
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .card-title{
+    display:flex; align-items:center; gap:10px; font-size:1rem; font-weight:600; margin-bottom:4px;
+  }
+  .card-title i{color:var(--purple);}
+  .card-sub{color:var(--text-dim); font-size:0.85rem; margin-bottom:16px;}
+  /* ---------- Navbar ---------- */
+  .navbar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:50px;
+  height:70px;
+  }
+  .nav-link{
+  color:#9ba5c5;
+  text-decoration:none;
+  font-size:18px;
+  font-weight:500;
+  position:relative;
+  padding:8px 0;
+  transition:.3s;
+  }
+  .nav-link:hover{
+  color:#ffffff;
+  }
+  .nav-link::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-6px;
+  width:0;
+  height:3px;
+  background:#6d5dfc;
+  transition:.35s;
+  }
+  .nav-link:hover::after,
+  .nav-link.active::after{
+  width:100%;
+  }
+  .dropdown{
+  position:relative;
+  display:flex;
+  align-items:center;
+  }
+  .dropdown-toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  }
+  .arrow{
+  font-size:12px;
+  transition:.3s;
+  }
+  .dropdown:hover .arrow{
+  transform:rotate(180deg);
+  }
+  .dropdown-menu{
+  position:absolute;
+  top:45px;
+  left:0;
+  min-width:220px;
+  display:flex;
+  flex-direction:column;
+  background:rgba(8,15,30,.95);
+  border:1px solid rgba(0,255,255,.15);
+  border-radius:12px;
+  backdrop-filter:blur(15px);
+  overflow:hidden;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(10px);
+  transition:.3s;
+  z-index:999;
+  }
+  .dropdown:hover .dropdown-menu{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+  }
+  .dropdown-menu a{
+  padding:14px 20px;
+  color:#c8d6f0;
+  text-decoration:none;
+  transition:.3s;
+  }
+  .dropdown-menu a:hover{
+  background:rgba(0,255,255,.08);
+  color:#00ffff;
+  padding-left:28px;
+  }
+  /* ---------- HERO ---------- */
+  .hero{ display:grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap:22px; }
+  .hero-left h1{font-size:1.9rem; line-height:1.25; margin-bottom:10px;}
+  .hero-left h1 .g1{background: linear-gradient(90deg,var(--purple),#a78bfa); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .hero-left p{color:var(--text-dim); font-size:0.92rem; margin-bottom:22px; max-width: 40ch;}
+  .stat-row{display:flex; gap:14px;}
+  .stat-box{
+    background: rgba(139,92,246,0.06); border:1px solid var(--border);
+    border-radius:12px; padding:14px 18px; flex:1;
+  }
+  .stat-box .num{font-size:1.5rem; font-weight:700;}
+  .stat-box .num.blue{color:var(--blue);}
+  .stat-box .num.purple{color:var(--purple);}
+  .stat-box .label{color:var(--text-dim); font-size:0.78rem; margin-top:2px;}
+  .stat-box .delta{color:var(--green); font-size:0.75rem; margin-top:4px;}
+  .stat-box .live{color:var(--green); font-size:0.75rem; margin-top:4px;}
+
+  /* radar */
+  .radar-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;}
+  .radar{
+    width: 230px; height:230px; border-radius:50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(10,12,24,0.2) 70%);
+    border: 1px solid rgba(59,130,246,0.25);
+    position:relative; overflow:visible;
+  }
+  .radar::before, .radar::after{
+    content:''; position:absolute; border-radius:50%; border:1px solid rgba(59,130,246,0.18);
+  }
+  .radar::before{inset:28px;}
+  .radar::after{inset:56px;}
+  .radar-ring3{position:absolute; inset:84px; border-radius:50%; border:1px solid rgba(59,130,246,0.18);}
+  .sweep{
+    position:absolute; inset:0; border-radius:50%;
+    background: conic-gradient(from 0deg, rgba(59,130,246,0.55), transparent 35%);
+    animation: spin 3.2s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg);} }
+  .radar-dot{position:absolute; width:8px; height:8px; border-radius:50%; background:#a78bfa; box-shadow:0 0 8px #a78bfa;}
+  .face-node{
+    position:absolute; width:40px; height:40px; border-radius:10px;
+    border:2px solid rgba(139,92,246,0.5); background: rgba(20,24,45,0.9);
+    display:flex; align-items:center; justify-content:center; color: var(--text-dim);
+    font-size:1rem;
+  }
+  .face-node.match{border-color: var(--red); color:#fca5a5;}
+  .radar-caption{color:var(--text-dim); font-size:0.82rem; margin-top:14px;}
+
+  /* system status panel */
+  .status-list{list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
+  .status-list li{display:flex; justify-content:space-between; align-items:center; font-size:0.87rem;}
+  .status-list .name{display:flex; align-items:center; gap:8px;}
+  .status-list .name i{color:var(--green); font-size:0.8rem;}
+  .status-list .val{color:var(--text-dim); font-size:0.8rem;}
+  .gpu-row{display:flex; justify-content:space-between; font-size:0.82rem; color:var(--text-dim); margin-bottom:6px;}
+  .bar-track{height:6px; border-radius:999px; background:#1b2036; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:999px; background: linear-gradient(90deg,var(--purple),var(--blue));}
+
+  /* ---------- UPLOAD SECTION ---------- */
+  .uploads{display:grid; grid-template-columns: 1fr 1fr; gap:22px;}
+  .upload-body{display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:stretch;}
+  .dropzone{
+    border: 2px dashed #2c3357; border-radius:12px; min-height:190px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    color: var(--text-dim); font-size:0.85rem; text-align:center; cursor:pointer;
+    transition: border-color .2s, background .2s;
+    padding: 16px;
+  }
+  .dropzone:hover{border-color: var(--purple); background: rgba(139,92,246,0.05);}
+  .dropzone i{font-size:1.6rem; color:var(--purple);}
+  .dropzone .browse{color:var(--blue); font-weight:600;}
+  .dropzone .hint{font-size:0.72rem; color:var(--text-dimmer); margin-top:6px;}
+  .preview-box{
+    border:1px solid var(--border); border-radius:12px; padding:12px;
+    display:flex; flex-direction:column; gap:10px; min-height:190px;
+  }
+  .preview-thumb{
+    position:relative; width:100%; height:120px; border-radius:8px; overflow:hidden;
+    background:#1a1f38; display:flex; align-items:center; justify-content:center;
+  }
+  .preview-thumb img{width:100%; height:100%; object-fit:cover;}
+  .preview-thumb .badge-ok{
+    position:absolute; top:6px; right:6px; background:var(--green); color:#fff;
+    width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem;
+  }
+  .preview-thumb .playbtn{
+    position:absolute; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.9);
+    display:flex; align-items:center; justify-content:center; color:#111;
+  }
+  .preview-info .fname{font-weight:600; font-size:0.85rem;}
+  .preview-info .fmeta{color:var(--text-dimmer); font-size:0.75rem; margin:2px 0 6px;}
+  .preview-info .ok-line{color:var(--green); font-size:0.78rem; display:flex; align-items:center; gap:6px;}
+  .preview-info .ok-line small{color:var(--text-dimmer);}
+
+  /* ---------- MULTI REFERENCE THUMBS ---------- */
+  .ref-thumb-grid{display:flex; flex-wrap:wrap; gap:8px; min-height:56px;}
+  .ref-thumb-chip{width:56px; height:56px; border-radius:8px; overflow:hidden; position:relative; border:1px solid var(--border); flex-shrink:0; background:#1a1f38;}
+  .ref-thumb-chip img{width:100%; height:100%; object-fit:cover;}
+  .ref-thumb-chip .chip-badge{
+    position:absolute; bottom:2px; right:2px; width:15px; height:15px; border-radius:50%;
+    background:#555; color:#fff; display:flex; align-items:center; justify-content:center; font-size:8px;
+  }
+
+  /* ---------- PIPELINE ---------- */
+  .pipeline-row{display:grid; grid-template-columns: repeat(7, 1fr); gap:14px; align-items:center;}
+  .pipe-step{
+    border-radius:12px; padding:16px 10px; text-align:center; position:relative;
+    background: rgba(255,255,255,0.015);
+    border:1px solid var(--border);
+  }
+  .pipe-step .n{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:0.75rem; font-weight:700; margin: 0 auto 10px;
+  }
+  .pipe-step .icon{font-size:1.3rem; margin-bottom:8px;}
+  .pipe-step .lbl{font-size:0.82rem; font-weight:600; line-height:1.2;}
+  .pipe-step .chk{color:var(--green); margin-top:8px; font-size:0.85rem; opacity:0.15; transition: opacity .3s;}
+  .pipe-step.done .chk{opacity:1;}
+  .pipe-step.done{box-shadow: 0 0 0 1px rgba(34,197,94,0.35); border-color: rgba(34,197,94,0.5) !important;}
+  .pipe-step.active{animation: pipePulse 1.2s infinite;}
+  @keyframes pipePulse{0%,100%{box-shadow:0 0 0 1px rgba(139,92,246,0.2);} 50%{box-shadow:0 0 0 3px rgba(139,92,246,0.4);}}
+  .pipe-step.purple{border-color: rgba(139,92,246,0.35);}
+  .pipe-step.purple .n{background:rgba(139,92,246,0.2); color:#c4b5fd;}
+  .pipe-step.purple .icon{color:#c4b5fd;}
+  .pipe-step.blue{border-color: rgba(59,130,246,0.35);}
+  .pipe-step.blue .n{background:rgba(59,130,246,0.2); color:#93c5fd;}
+  .pipe-step.blue .icon{color:#93c5fd;}
+  .pipe-step.teal{border-color: rgba(45,212,191,0.35);}
+  .pipe-step.teal .n{background:rgba(45,212,191,0.2); color:#5eead4;}
+  .pipe-step.teal .icon{color:#5eead4;}
+  .pipe-step.green{border-color: rgba(34,197,94,0.35);}
+  .pipe-step.green .n{background:rgba(34,197,94,0.2); color:#86efac;}
+  .pipe-step.green .icon{color:#86efac;}
+  .pipe-arrow{text-align:center; color:var(--text-dimmer);}
+  .pipeline-outer{display:flex; align-items:center; gap:0;}
+
+  .actions-row{display:flex; align-items:center; justify-content:center; gap:18px; margin: 6px 0 4px; position:relative;}
+  .start-btn{
+    background: linear-gradient(90deg,var(--purple),#6366f1);
+    color:#fff; border:none; padding:14px 32px; border-radius:12px; font-weight:700; font-size:0.95rem;
+    display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow: 0 10px 30px rgba(139,92,246,0.35);
+  }
+  .start-btn:hover{filter:brightness(1.08);}
+  .reset-btn{
+    position:absolute; right:0;
+    background:transparent; border:1px solid var(--border); color:var(--text-dim);
+    padding:10px 16px; border-radius:10px; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:8px;
+  }
+  .reset-btn:hover{border-color:var(--purple); color:#fff;}
+
+  /* ---------- 3 COLUMN LOWER ---------- */
+  .lower-grid{display:grid; grid-template-columns: 1.1fr 1fr 1fr; gap:22px;}
+  .console{
+    background:#05070f; border-radius:10px; padding:14px; font-family: 'Consolas', monospace; font-size:0.78rem;
+    height:270px; overflow-y:auto; color:#9aa4d0; line-height:1.7; border:1px solid var(--border);
+  }
+  .console .ok{color:var(--green); font-weight:700;}
+  .console .warn{color:#facc15;}
+  .clear-btn{
+    background:transparent; border:1px solid var(--border); color:var(--text-dim); font-size:0.75rem;
+    padding:5px 12px; border-radius:8px; cursor:pointer; margin-left:auto;
+  }
+  .card-title-row{display:flex; align-items:center; margin-bottom:12px;}
+
+  .stat-grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+  .mini-stat{
+    background: rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:12px 14px;
+  }
+  .mini-stat .lbl{display:flex; justify-content:space-between; color:var(--text-dim); font-size:0.78rem; margin-bottom:8px;}
+  .mini-stat .val{font-size:1.35rem; font-weight:700;}
+  .mini-stat .val span{font-size:0.85rem; color:var(--text-dim); font-weight:500;}
+
+  .timeline{list-style:none; display:flex; flex-direction:column; gap:16px; position:relative; padding-left:6px;}
+  .timeline li{display:flex; gap:12px; align-items:flex-start; position:relative;}
+  .timeline .tdot{width:9px; height:9px; border-radius:50%; background:var(--purple); margin-top:5px; flex-shrink:0; position:relative; z-index:1;}
+  .timeline li:not(:last-child)::before{
+    content:''; position:absolute; left:4px; top:14px; width:1px; height:calc(100% + 2px); background: var(--border);
+  }
+  .tl-time{color:var(--text-dimmer); font-size:0.72rem; min-width:48px;}
+  .tl-label{font-size:0.85rem; flex:1;}
+  .tl-label.bold{font-weight:700; color:#c4b5fd;}
+  .tl-check{color:var(--green); font-size:0.85rem;}
+
+  /* ---------- RESULT ---------- */
+  .result-grid{display:grid; grid-template-columns: 0.9fr 1.4fr 0.9fr 0.8fr; gap:22px; align-items:center;}
+  .result-img{border-radius:10px; overflow:hidden; height:210px; background:#1a1f38; position:relative;}
+  .result-img img{width:100%; height:100%; object-fit:cover;}
+  .result-lbl{color:var(--text-dim); font-size:0.75rem; letter-spacing:0.06em; margin-bottom:8px; font-weight:600;}
+  .vs-badge{
+    width:40px; height:40px; border-radius:50%; background:#181d38; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:var(--text-dim);
+    justify-self:center;
+  }
+  .vs-wrap{display:flex; align-items:center; gap:14px;}
+  .bbox{position:absolute; border:2px solid var(--red); border-radius:4px;}
+  .cam-tag{position:absolute; bottom:6px; right:8px; font-size:0.7rem; color:#fff; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;}
+  .frame-time{position:absolute; top:6px; left:8px; font-size:0.7rem; color:#fff; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;}
+
+  .score-col .score-lbl{color:var(--text-dim); font-size:0.8rem; margin-bottom:2px;}
+  .score-col .score-val{font-size:2rem; font-weight:800; color:var(--green); margin-bottom:14px;}
+  .conf-lbl{display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-dim); margin-bottom:6px;}
+  .conf-track{height:6px; background:#1b2036; border-radius:999px; overflow:hidden; margin-bottom:16px;}
+  .conf-fill{height:100%; background: linear-gradient(90deg,var(--green),#4ade80); border-radius:999px;}
+  .status-lbl{color:var(--text-dim); font-size:0.8rem; margin-bottom:6px;}
+  .match-pill{
+    display:inline-flex; align-items:center; gap:8px; background: rgba(34,197,94,0.12); color:var(--green);
+    border:1px solid rgba(34,197,94,0.4); padding:6px 14px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-bottom:14px;
+  }
+  .bbox-lbl{color:var(--text-dim); font-size:0.8rem;}
+  .bbox-val{color:var(--green); font-weight:700; font-size:0.85rem;}
+
+  .face-mesh-col{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .face-mesh{
+    width:130px; height:150px; border-radius:10px; position:relative;
+    background: radial-gradient(circle at 50% 40%, rgba(59,130,246,0.35), rgba(10,12,24,0.4));
+    border:1px solid rgba(59,130,246,0.4); display:flex; align-items:center; justify-content:center;
+  }
+  .face-mesh i{font-size:3.2rem; color: rgba(147,197,253,0.85);}
+  .corner{position:absolute; width:16px; height:16px; border-color: var(--blue); border-style:solid;}
+  .corner.tl{top:6px; left:6px; border-width:2px 0 0 2px;}
+  .corner.tr{top:6px; right:6px; border-width:2px 2px 0 0;}
+  .corner.bl{bottom:6px; left:6px; border-width:0 0 2px 2px;}
+  .corner.br{bottom:6px; right:6px; border-width:0 2px 2px 0;}
+  .mesh-caption{font-size:0.8rem; color:var(--green); font-weight:600;}
+  .download-btn{
+    background: linear-gradient(90deg,var(--purple),#6366f1); color:#fff; border:none; width:100%;
+    padding:12px; border-radius:10px; font-weight:700; font-size:0.85rem; cursor:pointer; display:flex;
+    align-items:center; justify-content:center; gap:8px; margin-top:16px;
+  }
+
+  footer{text-align:center; color:var(--text-dimmer); font-size:0.8rem; margin-top:30px;}
+  footer i{color:#e25555;}
+
+  @media (max-width: 1100px){
+    .hero{grid-template-columns: 1fr;}
+    .uploads{grid-template-columns:1fr;}
+    .pipeline-row{grid-template-columns: repeat(4,1fr);}
+    .lower-grid{grid-template-columns:1fr;}
+    .result-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><i class="fa-solid fa-shield-halved"></i> AI Missing Person Detection</div>
+  
+  <nav class="navbar">
+      <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
+      <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+      <div class="dropdown">
+          <a href="#" class="dropdown-toggle nav-link">
+              Contact
+              <span class="arrow">&#9662;</span>
+          </a>
+          <div class="dropdown-menu">
+              <a href="{{ url_for('user1Page') }}">@rahulmanna</a>
+              <a href="{{ url_for('user2Page') }}">@anurimaghoshal</a>
+              <a href="{{ url_for('user3Page') }}">@sheerenmukhtar</a>
+              <a href="{{ url_for('user4Page') }}">@riyasingh</a>
+          </div>
+      </div>
+  </nav>
+  <div class="engine-status"><span class="dot"></span> AI Engine Online</div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="card hero">
+    <div class="hero-left">
+      <h1>AI Powered <span class="g1">Surveillance</span><br>&amp; Recognition System</h1>
+      <p>Upload reference image and surveillance video to locate the missing person using deep learning models.</p>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="num purple" id="accuracy-val">--%</div>
+          <div class="label">Detection Accuracy</div>
+          <div class="delta" id="accuracy-delta">Awaiting first scan</div>
+        </div>
+        <div class="stat-box">
+          <div class="num blue" id="fps-val">24 FPS</div>
+          <div class="label">Processing Speed</div>
+          <div class="live">Real-time Analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="radar-wrap">
+      <div class="radar">
+        <div class="radar-ring3"></div>
+        <div class="sweep"></div>
+        <div class="face-node" style="top:-14px; left:78px;"><i class="fa-solid fa-user"></i></div>
+        <div class="face-node" style="top:30px; left:-24px;"><i class="fa-solid fa-user"></i></div>
+        <div class="face-node" style="top:170px; left:-24px;"><i class="fa-solid fa-user"></i></div>
+        <div class="face-node match" style="top:190px; right:-24px;"><i class="fa-solid fa-user"></i></div>
+        <div class="face-node" style="top:60px; right:-30px;"><i class="fa-solid fa-user"></i></div>
+      </div>
+      <div class="radar-caption">Scanning CCTV Feeds...</div>
+    </div>
+
+    <div>
+      <div class="card-title" style="margin-bottom:14px;"><i class="fa-solid fa-microchip"></i> AI SYSTEM STATUS</div>
+      <ul class="status-list" id="system-status-list">
+        <li><span class="name"><i class="fa-solid fa-circle-check"></i> Face Detector (YOLO-style)</span><span class="val" id="sys-yolo-val">Not Loaded</span></li>
+        <li><span class="name"><i class="fa-solid fa-circle-check"></i> Face Recognition Engine</span><span class="val" id="sys-facenet-val">Not Loaded</span></li>
+        <li><span class="name"><i class="fa-solid fa-circle-check"></i> CUDA CPU</span><span class="val" id="sys-cuda-val">Checking...</span></li>
+        <li><span class="name"><i class="fa-solid fa-circle-check"></i> OpenCV</span><span class="val" id="sys-opencv-val">Idle</span></li>
+        <li><span class="name"><i class="fa-solid fa-circle-check"></i> TensorFlow</span><span class="val" id="sys-tensorflow-val">Idle</span></li>
+      </ul>
+      <div class="gpu-row"><span>CPU Usage</span><span id="gpu-usage-val">74%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="gpu-usage-bar" style="width:74%;"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ UPLOADS ============ -->
+  <section class="uploads">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-image"></i> Upload Reference Image</div>
+      <div class="card-sub">Upload missing person's facial image</div>
+      <div class="upload-body">
+        <div class="dropzone" id="ref-dropzone">
+          <i class="fa-solid fa-user-plus"></i>
+          <div>Drag &amp; Drop Image(s) Here<br>or <span class="browse">Click to Browse</span></div>
+          <div class="hint">PNG, JPG, JPEG &middot; multiple images allowed</div>
+        </div>
+
+        <input type="file" id="ref-file-input" accept="image/png, image/jpeg" multiple style="display:none;">
+        <div class="preview-box" id="ref-preview">
+          <div class="ref-thumb-grid" id="ref-thumb-grid"></div>
+          <div class="preview-info">
+            <div class="fname" id="ref-summary-name">No images uploaded yet</div>
+            <div class="fmeta" id="ref-summary-meta"></div>
+            <div class="ok-line" id="ref-ok-line"><i class="fa-solid fa-circle-info"></i> Upload one or more clear face photos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-video"></i> Upload Surveillance Video</div>
+      <div class="card-sub">Upload CCTV or surveillance footage</div>
+      <div class="upload-body">
+        <div class="dropzone" id="video-dropzone">
+          <i class="fa-solid fa-film"></i>
+          <div>Drag &amp; Drop Video Here<br>or <span class="browse">Click to Browse</span></div>
+          <div class="hint">MP4, AVI, MOV, MKV (MAX. 100MB)</div>
+        </div>
+
+        <input type="file" id="video-file-input" accept="video/mp4, video/avi, video/quicktime, video/x-matroska" style="display:none;">
+        <div class="preview-box" id="video-preview">
+          <div class="preview-thumb">
+            <img id="video-thumb-img" src="" alt="cctv footage" style="display:none;">
+            <div class="badge-ok" id="video-badge-ok" style="display:none;"><i class="fa-solid fa-check"></i></div>
+          </div>
+          <div class="preview-info">
+            <div class="fname" id="video-fname">No video uploaded yet</div>
+            <div class="fmeta" id="video-fmeta"></div>
+            <div class="ok-line" id="video-ok-line" style="display:none;"><i class="fa-solid fa-check"></i> Video Loaded</div>
+            <div class="ok-line" id="video-frames-line" style="display:none;"><i class="fa-solid fa-check"></i> Frames Extracted <small id="video-frame-count"></small></div>
+            <div class="ok-line" id="video-location-line" style="display:none;"><i class="fa-solid fa-location-dot"></i> Location: <small id="video-location-text"></small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PIPELINE ============ -->
+  <section class="card">
+    <div class="card-title"><i class="fa-solid fa-diagram-project"></i> AI DETECTION PIPELINE</div>
+    <br>
+    <div class="pipeline-outer">
+      <div class="pipe-step purple" id="step-1" style="flex:1;"><div class="n">1</div><div class="icon"><i class="fa-solid fa-image"></i></div><div class="lbl">Image Uploaded</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step purple" id="step-2" style="flex:1;"><div class="n">2</div><div class="icon"><i class="fa-solid fa-bullseye"></i></div><div class="lbl">Face Encoding</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step blue" id="step-3" style="flex:1;"><div class="n">3</div><div class="icon"><i class="fa-solid fa-play"></i></div><div class="lbl">Processing Video</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step blue" id="step-4" style="flex:1;"><div class="n">4</div><div class="icon"><i class="fa-regular fa-images"></i></div><div class="lbl">Extracting Frames</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step teal" id="step-5" style="flex:1;"><div class="n">5</div><div class="icon"><i class="fa-solid fa-code-compare"></i></div><div class="lbl">Comparing Features</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step teal" id="step-6" style="flex:1;"><div class="n">6</div><div class="icon"><i class="fa-solid fa-diagram-project"></i></div><div class="lbl">Calculating Similarity</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+      <div class="pipe-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="pipe-step green" id="step-7" style="flex:1;"><div class="n">7</div><div class="icon"><i class="fa-solid fa-shield"></i></div><div class="lbl">Generating Result</div><div class="chk"><i class="fa-solid fa-check"></i></div></div>
+    </div>
+  </section>
+
+  <!-- ============ ACTION ROW ============ -->
+  <div class="actions-row">
+
+    <button class="start-btn" id="start-detection-btn" onclick="startDetection()">
+      <i class="fa-solid fa-bolt"></i> START AI DETECTION
+    </button>
+    <button class="reset-btn" onclick="resetPage()"><i class="fa-solid fa-rotate-left"></i> Reset Page</button>
+  </div>
+
+  <!-- ============ LOWER 3 COLUMNS ============ -->
+  <section class="lower-grid">
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title" style="margin-bottom:0;"><i class="fa-solid fa-list"></i> AI CONSOLE LOGS</div>
+        <button class="clear-btn" onclick="document.getElementById('console-log').innerHTML=''">Clear</button>
+      </div>
+
+      <div class="console" id="console-log">
+        <div>Waiting for detection to start... upload a reference image and a video, then click START AI DETECTION.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-chart-simple"></i> REAL-TIME STATISTICS</div>
+      <br>
+
+      <div class="stat-grid" id="realtime-stats">
+        <div class="mini-stat"><div class="lbl"><span>Frames Processed</span><i class="fa-solid fa-clapperboard"></i></div><div class="val" id="stat-frames">18,241</div></div>
+        <div class="mini-stat"><div class="lbl"><span>Faces Detected</span><i class="fa-solid fa-users"></i></div><div class="val" id="stat-faces">37</div></div>
+        <div class="mini-stat"><div class="lbl"><span>Inference Time</span><i class="fa-solid fa-stopwatch"></i></div><div class="val" id="stat-inference">38 <span>ms</span></div></div>
+        <div class="mini-stat"><div class="lbl"><span>CPU Usage</span><i class="fa-solid fa-gauge"></i></div><div class="val" id="stat-gpu">74 <span>%</span></div></div>
+        <div class="mini-stat"><div class="lbl"><span>RAM Usage</span><i class="fa-regular fa-square"></i></div><div class="val" id="stat-ram">6.3 <span>GB</span></div></div>
+        <div class="mini-stat"><div class="lbl"><span>Match Confidence</span><i class="fa-solid fa-crosshairs"></i></div><div class="val" id="stat-confidence">96.8 <span>%</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> DETECTION TIMELINE</div>
+      <br>
+
+      <ul class="timeline" id="detection-timeline"></ul>
+    </div>
+  </section>
+
+  <!-- ============ DETECTION RESULT ============ -->
+  <section class="card">
+    <div class="card-title"><i class="fa-solid fa-bullseye"></i> DETECTION RESULT</div>
+    <br>
+   
+    <div class="result-grid" id="result-grid-empty-note" style="display:block;">
+      <p style="color:var(--text-dim); font-size:0.9rem;">No result yet — upload a reference image and a video, then run detection. This panel fills in automatically once a match is found.</p>
+    </div>
+    <div class="result-grid" id="result-grid" style="display:none;">
+      <div>
+        <div class="result-lbl">REFERENCE IMAGE</div>
+        <div class="result-img"><img id="reference-result-img" src="" alt="reference"></div>
+      </div>
+
+      <div class="vs-wrap">
+        <div>
+          <div class="result-lbl">MATCHED FRAME</div>
+          <div class="result-img" style="height:230px;">
+            <img id="matched-frame-img" src="" alt="matched frame">
+            <div class="frame-time" id="frame-time-label">--</div>
+            <div class="cam-tag" id="cam-tag-label">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-col">
+        <div class="score-lbl">Similarity Score</div>
+        <div class="score-val" id="similarity-score">--%</div>
+        <div class="conf-lbl"><span>Confidence</span><span id="confidence-pct">--%</span></div>
+        <div class="conf-track"><div class="conf-fill" id="confidence-bar" style="width:0%;"></div></div>
+        <div class="status-lbl">Status</div>
+        <div class="match-pill"><i class="fa-solid fa-check"></i> MATCH FOUND</div>
+        <div class="bbox-lbl">Bounding Box</div>
+        <div class="bbox-val" style="margin-bottom:10px;">Detected</div>
+        <div class="bbox-lbl">Location</div>
+        <div class="bbox-val" id="result-location">--</div>
+      </div>
+
+      <div class="face-mesh-col">
+        <div class="face-mesh">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <i class="fa-solid fa-street-view"></i>
+        </div>
+        <div class="mesh-caption">AI Match Successful</div>
+        <button class="download-btn" onclick="downloadResult()"><i class="fa-solid fa-download"></i> Download Result</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>&copy; 2026 AI Missing Person Detection System | Deep Learning Powered | Built with <i class="fa-solid fa-heart"></i></footer>
+</div>
+
+<script>
+
+const API_BASE = "http://localhost:5000"; // <-- must match where app.py is running
+
+let referenceIds = [];      // ids returned by /api/upload-reference, sent to /api/start-detection
+let videoId = null;         // id returned by /api/upload-video
+let currentJobId = null;    // id returned by /api/start-detection
+let pollTimer = null;
+let lastLogCount = 0;
+let lastTimelineCount = 0;
+let firstRefDataUrl = null; // used to show the reference photo in the final result panel
+
+// ---- Dropzone -> hidden file input wiring ----
+document.getElementById('ref-dropzone').addEventListener('click', () => {
+  document.getElementById('ref-file-input').click();
+});
+document.getElementById('video-dropzone').addEventListener('click', () => {
+  document.getElementById('video-file-input').click();
+});
+
+// ---- Real drag & drop support (not just click-to-browse) ----
+function enableDragDrop(dropzoneId, inputId) {
+  const zone = document.getElementById(dropzoneId);
+  const input = document.getElementById(inputId);
+  ['dragenter', 'dragover'].forEach(evt =>
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      zone.style.borderColor = '#8b5cf6';
+      zone.style.background = 'rgba(139,92,246,0.08)';
+    })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      zone.style.borderColor = '';
+      zone.style.background = '';
+    })
+  );
+  zone.addEventListener('drop', (e) => {
+    if (!e.dataTransfer.files.length) return;
+    input.files = e.dataTransfer.files;
+    input.dispatchEvent(new Event('change'));
+  });
+}
+enableDragDrop('ref-dropzone', 'ref-file-input');
+enableDragDrop('video-dropzone', 'video-file-input');
+
+// ---- helper: add a thumbnail chip immediately (before the backend responds) ----
+function addRefThumbChip(file) {
+  const chip = document.createElement('div');
+  chip.className = 'ref-thumb-chip';
+  const img = document.createElement('img');
+  const badge = document.createElement('div');
+  badge.className = 'chip-badge';
+  badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+    if (!firstRefDataUrl) firstRefDataUrl = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  chip.appendChild(img);
+  chip.appendChild(badge);
+  document.getElementById('ref-thumb-grid').appendChild(chip);
+  return chip;
+}
+
+// BACKEND INTEGRATION POINT #1 — multiple reference images
+document.getElementById('ref-file-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  const chips = files.map(f => addRefThumbChip(f));
+  document.getElementById('ref-summary-name').innerText = `Uploading ${files.length} image(s)...`;
+
+  const formData = new FormData();
+  files.forEach(f => formData.append('reference_images', f));
+
+  try {
+    const res = await fetch(`${API_BASE}/api/upload-reference`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    const data = await res.json();
+
+    data.images.forEach((img, i) => {
+      referenceIds.push(img.id);
+      const badge = chips[i] ? chips[i].querySelector('.chip-badge') : null;
+      if (!badge) return;
+      if (img.face_detected && img.encoding_ready) {
+        badge.style.background = 'var(--green)';
+        badge.innerHTML = '<i class="fa-solid fa-check"></i>';
+      } else {
+        badge.style.background = 'var(--red)';
+        badge.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      }
+    });
+
+    const goodCount = data.images.filter(i => i.encoding_ready).length;
+    document.getElementById('ref-summary-name').innerText = `${referenceIds.length} image(s) uploaded`;
+    document.getElementById('ref-summary-meta').innerText = `${goodCount} usable face encoding(s) ready`;
+    document.getElementById('ref-ok-line').innerHTML =
+      goodCount > 0
+        ? '<i class="fa-solid fa-check" style="color:var(--green);"></i> Encoding Ready'
+        : '<i class="fa-solid fa-triangle-exclamation" style="color:#facc15;"></i> No face detected in uploaded image(s)';
+
+    // Step 1 of the pipeline ticks the moment we have at least one usable reference face
+    setStepDone('step-1', goodCount > 0);
+  } catch (err) {
+    console.error('Reference upload failed:', err);
+    document.getElementById('ref-summary-name').innerText = 'Upload failed — is app.py running on ' + API_BASE + '?';
+  }
+});
+
+// BACKEND INTEGRATION POINT #2 — surveillance video
+document.getElementById('video-file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  document.getElementById('video-fname').innerText = `Uploading ${file.name}...`;
+
+  const formData = new FormData();
+  formData.append('surveillance_video', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/upload-video`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    const data = await res.json();
+
+    videoId = data.id;
+    document.getElementById('video-thumb-img').src = 'data:image/jpeg;base64,' + data.thumbnail_b64;
+    document.getElementById('video-thumb-img').style.display = 'block';
+    document.getElementById('video-badge-ok').style.display = 'flex';
+    document.getElementById('video-fname').innerText = data.filename;
+    document.getElementById('video-fmeta').innerText = `${data.duration} \u00b7 ${data.resolution}`;
+    document.getElementById('video-ok-line').style.display = 'flex';
+    document.getElementById('video-frames-line').style.display = 'flex';
+    document.getElementById('video-frame-count').innerText = `(${data.frames_extracted.toLocaleString()} frames)`;
+    document.getElementById('video-location-line').style.display = 'flex';
+    document.getElementById('video-location-text').innerText = data.location;
+  } catch (err) {
+    console.error('Video upload failed:', err);
+    document.getElementById('video-fname').innerText = 'Upload failed — is app.py running on ' + API_BASE + '?';
+  }
+});
+
+// ---- pipeline helpers ----
+function setStepDone(id, done) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('done', !!done);
+}
+function setStepActive(id, active) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('active', !!active);
+}
+function applyPipelineState(pipeline) {
+  const keys = ['image_uploaded', 'face_encoding', 'processing_video', 'extracting_frames',
+                'comparing_features', 'calculating_similarity', 'generating_result'];
+  keys.forEach((key, i) => {
+    setStepDone(`step-${i + 1}`, pipeline[key]);
+    // whichever step is the first not-yet-done one is the "currently running" step
+  });
+  const firstNotDone = keys.findIndex(k => !pipeline[k]);
+  keys.forEach((k, i) => setStepActive(`step-${i + 1}`, i === firstNotDone));
+}
+
+function applySystemStatus(status) {
+  document.getElementById('sys-yolo-val').innerText = status.yolo;
+  document.getElementById('sys-facenet-val').innerText = status.facenet;
+  document.getElementById('sys-cuda-val').innerText = status.cuda;
+  document.getElementById('sys-opencv-val').innerText = status.opencv;
+  document.getElementById('sys-tensorflow-val').innerText = status.tensorflow;
+}
+
+// Every one of these values comes straight from the SAME job.stats object
+// the backend returns — so the hero panel, the system-status GPU bar, and
+// the "real-time statistics" tiles are always in sync (never separate numbers).
+function applyStats(stats) {
+  document.getElementById('stat-frames').innerText = stats.frames_processed.toLocaleString();
+  document.getElementById('stat-faces').innerText = stats.faces_detected;
+  document.getElementById('stat-inference').innerHTML = stats.inference_time_ms + ' <span>ms</span>';
+  document.getElementById('stat-gpu').innerHTML = stats.gpu_usage + ' <span>%</span>';
+  document.getElementById('stat-ram').innerHTML = stats.ram_usage_gb + ' <span>GB</span>';
+  document.getElementById('stat-confidence').innerHTML = stats.match_confidence + ' <span>%</span>';
+
+  document.getElementById('gpu-usage-val').innerText = stats.gpu_usage + '%';
+  document.getElementById('gpu-usage-bar').style.width = Math.min(100, stats.gpu_usage) + '%';
+  document.getElementById('fps-val').innerText = stats.processing_fps + ' FPS';
+
+  // "Detection Accuracy" mirrors this run's match confidence once a match exists
+  // (a true model-accuracy metric would come from a labeled validation set, not
+  // a single run — this keeps the number honest rather than inventing a static one)
+  if (stats.match_confidence > 0) {
+    document.getElementById('accuracy-val').innerText = stats.match_confidence + '%';
+    document.getElementById('accuracy-delta').innerText = 'Based on current scan';
+  }
+}
+
+function appendNewLogs(logs) {
+  const consoleEl = document.getElementById('console-log');
+  if (lastLogCount === 0 && logs.length > 0) consoleEl.innerHTML = ''; // clear the "waiting..." message
+  for (let i = lastLogCount; i < logs.length; i++) {
+    const line = logs[i];
+    const div = document.createElement('div');
+    if (line.level === 'ok') div.className = 'ok';
+    if (line.level === 'warn') div.className = 'warn';
+    div.innerText = `[${line.time}] ${line.text}`;
+    consoleEl.appendChild(div);
+  }
+  lastLogCount = logs.length;
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function appendNewTimeline(timeline) {
+  const ul = document.getElementById('detection-timeline');
+  for (let i = lastTimelineCount; i < timeline.length; i++) {
+    const t = timeline[i];
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="tdot"></span><span class="tl-time">${t.time}</span><span class="tl-label${t.bold ? ' bold' : ''}">${t.label}</span><i class="fa-solid fa-check tl-check"></i>`;
+    ul.appendChild(li);
+  }
+  lastTimelineCount = timeline.length;
+}
+
+function renderResult(result) {
+  document.getElementById('result-grid-empty-note').style.display = 'none';
+  document.getElementById('result-grid').style.display = 'grid';
+
+  document.getElementById('reference-result-img').src = firstRefDataUrl || '';
+  document.getElementById('matched-frame-img').src = 'data:image/jpeg;base64,' + result.matched_frame_b64;
+  document.getElementById('frame-time-label').innerText = result.timestamp;
+  document.getElementById('cam-tag-label').innerText = result.camera;
+  document.getElementById('similarity-score').innerText = result.similarity_score;
+  document.getElementById('confidence-pct').innerText = result.similarity + '%';
+  document.getElementById('confidence-bar').style.width = result.similarity + '%';
+  document.getElementById('result-location').innerText = result.location;
+}
+
+// BACKEND INTEGRATION POINT #3 — kicks off the real detection job
+async function startDetection() {
+  if (!referenceIds.length) { alert('Please upload at least one reference image first.'); return; }
+  if (!videoId) { alert('Please upload a surveillance video first.'); return; }
+
+  // reset steps 2-7 (step 1 stays done since images are already uploaded)
+  ['step-2', 'step-3', 'step-4', 'step-5', 'step-6', 'step-7'].forEach(id => setStepDone(id, false));
+  document.getElementById('result-grid').style.display = 'none';
+  document.getElementById('result-grid-empty-note').style.display = 'block';
+  lastLogCount = 0;
+  lastTimelineCount = 0;
+  document.getElementById('detection-timeline').innerHTML = '';
+  document.getElementById('console-log').innerHTML = '<div>Connecting to AI engine...</div>';
+
+  const btn = document.getElementById('start-detection-btn');
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> RUNNING DETECTION...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/start-detection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference_ids: referenceIds, video_id: videoId })
+    });
+    const job = await res.json();
+    if (job.error) throw new Error(job.error);
+    currentJobId = job.job_id;
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => pollJobStatus(currentJobId), 900);
+  } catch (err) {
+    console.error('Detection failed to start:', err);
+    alert('Could not start detection — check that app.py is running on ' + API_BASE);
+    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> START AI DETECTION';
+    btn.disabled = false;
+  }
+}
+
+// BACKEND INTEGRATION POINT #3b — poll the running job until it's done
+async function pollJobStatus(jobId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/job-status/${jobId}`);
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    const job = await res.json();
+
+    applyPipelineState(job.pipeline);
+    applySystemStatus(job.system_status);
+    applyStats(job.stats);
+    appendNewLogs(job.logs);
+    appendNewTimeline(job.timeline);
+
+    if (job.done) {
+      clearInterval(pollTimer);
+      const btn = document.getElementById('start-detection-btn');
+      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> START AI DETECTION';
+      btn.disabled = false;
+      if (job.result) renderResult(job.result);
+    }
+  } catch (err) {
+    console.error('Polling failed:', err);
+  }
+}
+
+// BACKEND INTEGRATION POINT #8 — download the labeled result image
+function downloadResult() {
+  if (!currentJobId) { alert('Run a detection first.'); return; }
+  window.location.href = `${API_BASE}/api/download-result/${currentJobId}`;
+}
+
+function resetPage() {
+  location.reload();
+}
+</script>
+</body>
+</html>

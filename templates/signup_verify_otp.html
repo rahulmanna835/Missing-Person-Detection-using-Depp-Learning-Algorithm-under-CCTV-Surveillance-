@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email - Sign Up{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timer-text {
+        font-size: 14px;
+        color: #f87171;
+        text-align: center;
+        margin: 16px 0;
+        font-weight: 700;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 12px;
+        border-radius: 10px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="brand-header">
+    <div class="brand-icon">✉️</div>
+    <div class="brand-name">NexAuth</div>
+    <div class="brand-tag">Verify Email</div>
+</div>
+
+<div class="auth-card">
+    <h1>Verify Your Email</h1>
+    <p>We sent a verification code to <strong>{{ email }}</strong></p>
+
+    <div class="timer-text" id="timerText">⏱️ OTP expires in 10:00</div>
+
+    <form method="POST">
+        <input type="hidden" name="email" value="{{ email }}">
+        
+        <div class="form-group">
+            <label>Enter 6-Digit Code</label>
+            <input 
+                type="text" 
+                name="otp" 
+                placeholder="000000" 
+                maxlength="6" 
+                required
+                pattern="[0-9]{6}"
+                style="text-align: center; font-size: 24px; letter-spacing: 10px;"
+            >
+        </div>
+
+        <button type="submit" class="btn">✓ Verify & Create Account</button>
+    </form>
+
+    <div class="form-link" style="margin-top: 30px;">
+        <a href="{{ url_for('signup') }}">← Back to Sign Up</a>
+    </div>
+</div>
+
+<script>
+// Timer countdown
+let timeLeft = 600; // 10 minutes in seconds
+
+function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    
+    document.getElementById('timerText').textContent = 
+        `⏱️ OTP expires in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeLeft > 0) {
+        timeLeft--;
+        setTimeout(updateTimer, 1000);
+    } else {
+        document.getElementById('timerText').innerHTML = 
+            '❌ OTP expired. <a href="{{ url_for("signup") }}">Start over</a>';
+    }
+}
+
+updateTimer();
+
+// Auto-focus to OTP input
+document.querySelector('input[name="otp"]').focus();
+</script>
+{% endblock %}

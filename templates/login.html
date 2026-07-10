@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Authentication{% endblock %}
+
+{% block content %}
+<div class="brand-header">
+    <div class="brand-icon">🔐</div>
+    <div class="brand-name">NexAuth</div>
+    <div class="brand-tag">Secure Login</div>
+</div>
+
+<div class="auth-card">
+    <h1>Welcome Back</h1>
+    <p>Sign in to your account to continue</p>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="you@example.com" 
+                required
+                value="{{ request.form.get('email', '') }}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="••••••••••••" 
+                required
+            >
+            <!-- Show Password Checkbox -->
+            <div class="show-password">
+                <input type="checkbox" id="showPassword" onclick="togglePassword()">
+                <label for="showPassword">
+                    Show Password
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Verify CAPTCHA</label>
+            <div class="captcha-box">
+                <div class="captcha-text" id="captchaText">{{ captcha }}</div>
+                <button type="button" class="refresh-btn" onclick="refreshCaptcha()">🔄</button>
+            </div>
+            <input 
+                type="text" 
+                name="captcha" 
+                placeholder="Enter CAPTCHA text" 
+                required
+                style="text-transform: uppercase;"
+            >
+        </div>
+
+        <button type="submit" class="btn">🔐 Sign In</button>
+    </form>
+
+    <div class="form-link">
+        Don't have an account? <a href="{{ url_for('signup') }}">Create one here</a>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById("password");
+
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+    } else {
+        passwordField.type = "password";
+    }
+}
+
+function refreshCaptcha() {
+    fetch('/api/refresh-captcha', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({page: 'login'})
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('captchaText').textContent = data.captcha;
+        document.querySelector('input[name="captcha"]').value = '';
+        document.querySelector('input[name="captcha"]').focus();
+    });
+}
+</script>
+{% endblock %}
